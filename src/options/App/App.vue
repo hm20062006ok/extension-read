@@ -17,7 +17,7 @@
     </el-row>
     <el-row>
       <el-col :offset="20">
-        <el-button type="primary">识别</el-button>
+        <el-button type="primary" @click.native="getAllData">识别</el-button>
       </el-col>
     </el-row>
     <el-row>
@@ -29,10 +29,6 @@
             prop="link"
             label="链接"
             width="380">
-        </el-table-column>
-        <el-table-column
-            prop="site"
-            label="平台">
         </el-table-column>
         <el-table-column
             prop="author"
@@ -54,23 +50,6 @@ export default {
     return {
       textarea: '',
       tableData: []
-      // tableData: [{
-      //   link: '2016-05-02',
-      //   name: '王小虎',
-      //   address: '上海市普陀区金沙江路 1518 弄'
-      // }, {
-      //   link: '2016-05-04',
-      //   name: '王小虎',
-      //   address: '上海市普陀区金沙江路 1517 弄'
-      // }, {
-      //   link: '2016-05-01',
-      //   name: '王小虎',
-      //   address: '上海市普陀区金沙江路 1519 弄'
-      // }, {
-      //   link: '2016-05-03',
-      //   name: '王小虎',
-      //   address: '上海市普陀区金沙江路 1516 弄'
-      // }]
     }
   },
   methods: {
@@ -80,7 +59,65 @@ export default {
       links.forEach(link => {
         this.tableData.push({link: link})
       })
+    },
+    getAllData() {
+      if (this.tableData.length > 0) {
+        this.tableData.forEach((item, index) => {
+          console.log(item.link)
+          console.log(index)
+          this.getData(item.link)
+        })
+      }
+    },
+    getData(url) {
+      this.judgeSiteByUrl(url)
+    },
+
+    judgeSiteByUrl(url) {
+      let type = '';
+      if (url.indexOf('aikahao.xcar.com.cn/item') > -1) {
+        type = 'aikahao';
+      }else if(url.indexOf('aikahao.xcar.com.cn/video') > -1) {
+        type = 'aikahao_video'
+      }else if(url.indexOf('acfun.cn') > -1) {
+        type = 'acfun'
+      }else if(url.indexOf('iqiyi.com') > -1) {
+        type = 'iqiyi'
+      }else if(url.indexOf('cheshihao.cheshi.com/news') > -1) {
+        type = 'cheshihao'
+      }else if(url.indexOf('cheshihao.cheshi.com/video') > -1) {
+        type = 'cheshihao_video'
+      }else if(url.indexOf('chexun.com') > -1) {
+        type = 'chexun'
+      }else if(url.indexOf('v.ifeng.com/c') > -1) {
+        type = 'ifeng_video'
+      }else if(url.indexOf('hj.pcauto.com.cn') > -1) {
+        type = 'hj'
+      }
+      console.log("type: ", type);
     }
+  },
+  mounted() {
+    let that = this;
+    this.$http.get('http://hj.pcauto.com.cn/article/903912')
+        .then(function (response) {
+          console.log('response:', response)
+          // let html = that.$dom.load(response.data)
+          // let read = html('.browse_number').text().replace(/[^\d.]/g, "");
+          // console.log('read：',read);
+          // let author = html('.detail_txt_lf')
+          //     .children('a')
+          // .text().trim();
+          // console.log('author',author)
+        })
+        .catch(function (error) {
+          // handle error
+          console.log(error);
+        })
+        .finally(function () {
+          // always executed
+          console.log('done');
+        })
   }
 }
 </script>

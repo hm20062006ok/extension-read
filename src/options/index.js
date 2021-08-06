@@ -1,5 +1,8 @@
 import Vue from "vue";
 import AppComponent from "./App/App.vue";
+import axios from 'axios'
+// import cheerio from 'cheerio'
+const cheerio = require('cheerio');
 
 import 'element-ui/lib/theme-chalk/index.css';
 Vue.component("app-component", AppComponent);
@@ -11,6 +14,8 @@ Vue.use(Col)
 Vue.use(Button)
 Vue.use( Table)
 Vue.use( TableColumn)
+Vue.prototype.$http = axios
+Vue.prototype.$dom = cheerio
 new Vue({
   el: "#app",
   render: createElement => {
