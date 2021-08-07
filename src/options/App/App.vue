@@ -44,6 +44,7 @@
 </template>
 
 <script>
+
 export default {
   name: 'app',
   data() {
@@ -65,59 +66,83 @@ export default {
         this.tableData.forEach((item, index) => {
           console.log(item.link)
           console.log(index)
-          this.getData(item.link)
+          this.getData(item.link,index)
         })
       }
     },
-    getData(url) {
-      this.judgeSiteByUrl(url)
+    getData(url,index) {
+      let that = this;
+      //http://www.chexun.com/2021-08-05/113623283.html
+      //http://m.chexun.com/2021-08-05/113623283.html
+      if(url.indexOf('chexun.com') > -1){
+        url = url.replace('www.','m.')
+      }
+      console.log('replaced url ',url)
+
+      this.$http.get(url)
+          .then(function (response) {
+            console.log('response:', response)
+            if (url.indexOf('aikahao.xcar.com.cn/item') > -1) {
+              // type = 'aikahao';
+              that.handleAikaHao(response,index)
+            }else if(url.indexOf('aikahao.xcar.com.cn/video') > -1) {
+              // type = 'aikahao_video'
+              that.handleAikaHaoVideo(response,index)
+            }else if(url.indexOf('acfun.cn') > -1) {
+              // type = 'acfun'
+            }else if(url.indexOf('iqiyi.com') > -1) {
+              // type = 'iqiyi'
+            }else if(url.indexOf('cheshihao.cheshi.com/news') > -1) {
+              that.cheShiHao(response,index)
+            }else if(url.indexOf('cheshihao.cheshi.com/video') > -1) {
+              that.cheShiHao(response,index)
+            }else if(url.indexOf('chexun.com') > -1) {
+              that.cheXun(response, index)
+            }else if(url.indexOf('v.ifeng.com/c') > -1) {
+              // type = 'ifeng_video'
+            }else if(url.indexOf('hj.pcauto.com.cn') > -1) {
+              // type = 'hj'
+            }
+          })
+          .catch(function (error) {
+            // handle error
+            console.log(error);
+          })
+          .finally(function () {
+            // always executed pageViewN
+
+            console.log('done');
+          })
+    },
+    cheXun(response, index){
+      let html = this.$dom.load(response.data)
+      let read = html('.works-txtimg-liulan').first().text()
+      this.$set(this.tableData[index], 'read',read)
+      let author = html('.v-a-name').text().trim();
+      this.$set(this.tableData[index], 'author',author)
+    },
+    handleAikaHao(response,index){
+      let html = this.$dom.load(response.data)
+      let read = html('.browse_number').text().replace(/[^\d.]/g, "");
+      this.$set(this.tableData[index], 'read',read)
+      let author = html('.detail_txt_lf').children('a').text().trim();
+      this.$set(this.tableData[index], 'author',author)
     },
 
-    judgeSiteByUrl(url) {
-      let type = '';
-      if (url.indexOf('aikahao.xcar.com.cn/item') > -1) {
-        type = 'aikahao';
-      }else if(url.indexOf('aikahao.xcar.com.cn/video') > -1) {
-        type = 'aikahao_video'
-      }else if(url.indexOf('acfun.cn') > -1) {
-        type = 'acfun'
-      }else if(url.indexOf('iqiyi.com') > -1) {
-        type = 'iqiyi'
-      }else if(url.indexOf('cheshihao.cheshi.com/news') > -1) {
-        type = 'cheshihao'
-      }else if(url.indexOf('cheshihao.cheshi.com/video') > -1) {
-        type = 'cheshihao_video'
-      }else if(url.indexOf('chexun.com') > -1) {
-        type = 'chexun'
-      }else if(url.indexOf('v.ifeng.com/c') > -1) {
-        type = 'ifeng_video'
-      }else if(url.indexOf('hj.pcauto.com.cn') > -1) {
-        type = 'hj'
-      }
-      console.log("type: ", type);
+    handleAikaHaoVideo(response,index){
+      let html = this.$dom.load(response.data)
+      let read = html('.browse_number').text().replace(/[^\d.]/g, "");
+      this.$set(this.tableData[index], 'read',read)
+      let author = html('.detail_txt_lf').children('a').text().trim();
+      this.$set(this.tableData[index], 'author',author)
+    },
+    cheShiHao(response,index){
+      let html = this.$dom.load(response.data)
+      let read = html('.icon_browse').parent().text()
+      this.$set(this.tableData[index], 'read',read)
+      let author = html('.name').text().trim();
+      this.$set(this.tableData[index], 'author',author)
     }
-  },
-  mounted() {
-    let that = this;
-    this.$http.get('http://hj.pcauto.com.cn/article/903912')
-        .then(function (response) {
-          console.log('response:', response)
-          // let html = that.$dom.load(response.data)
-          // let read = html('.browse_number').text().replace(/[^\d.]/g, "");
-          // console.log('read：',read);
-          // let author = html('.detail_txt_lf')
-          //     .children('a')
-          // .text().trim();
-          // console.log('author',author)
-        })
-        .catch(function (error) {
-          // handle error
-          console.log(error);
-        })
-        .finally(function () {
-          // always executed
-          console.log('done');
-        })
   }
 }
 </script>
