@@ -22,3 +22,24 @@ new Vue({
     return createElement(AppComponent);
   }
 });
+
+
+function getUsername(id){
+  return new Promise((resolve, reject)=>{
+    // 请求username的操作，模拟
+
+  });
+}
+
+function getUserInfo(username){
+  return new Promise((resolve, reject)=>{
+
+  });
+}
+
+let asyncFn = async function(id){
+  let username = await getUsername(id);
+  let userInfo = await getUserInfo(username);
+  console.log(userInfo);
+}
+
