@@ -58,11 +58,11 @@ export default {
     }
   },
   methods: {
-    exportExcel(){
+    exportExcel() {
       import('./Export2Excel').then(excel => {
         console.log('Export2Excel')
         const tHeader = ['链接', '作者', '阅读数', '状态']
-        const filterVal = [ 'link', 'author', 'read', 'status']
+        const filterVal = ['link', 'author', 'read', 'status']
         const list = this.tableData
         const data = this.formatJson(filterVal, list)
         excel.export_json_to_excel({
@@ -75,7 +75,7 @@ export default {
     },
     formatJson(filterVal, jsonData) {
       return jsonData.map(v => filterVal.map(j => {
-          return v[j]
+        return v[j]
       }))
     },
 
@@ -90,7 +90,9 @@ export default {
       if (this.tableData.length > 0) {
         for (let i = 0; i < this.tableData.length; i++) {
           console.log(this.tableData[i].link)
-          let result = await this.getData(this.tableData[i].link, i)
+          let result = await this.getData(this.tableData[i].link, i).catch(err => {
+            this.$set(this.tableData[result.index], 'status', err.done)
+          })
           this.$set(this.tableData[result.index], 'status', result.done)
           console.log('result', result)
           await this.sleeeep(5000)
@@ -98,7 +100,7 @@ export default {
         }
       }
     },
-    sleeeep(ms){
+    sleeeep(ms) {
       return new Promise(resolve => setTimeout(resolve, ms))
     },
     getData: function (url, index) {
@@ -107,7 +109,13 @@ export default {
         let that = that2;
         if (url.indexOf('chexun.com') > -1) {
           url = url.replace('www.', 'm.')
+        } else if (url.indexOf('iqiyi.com') > -1) {
+          url = url.replace('www.', 'm.')
+        } else if (url.indexOf('toutiao.com') > -1) {
+          url = url.replace('www.', 'm.')
         }
+
+
         this.$http.get(url).then(function (response) {
           console.log('response:', response)
           if (url.indexOf('aikahao.xcar.com.cn/item') > -1) {
@@ -115,30 +123,28 @@ export default {
           } else if (url.indexOf('aikahao.xcar.com.cn/video') > -1) {
             that.handleAikaHaoVideo(response, index)
           } else if (url.indexOf('acfun.cn') > -1) {
-            // TODO
+            that.acfun(response, index)
           } else if (url.indexOf('iqiyi.com') > -1) {
-            // TODO
+            that.iqiyi(response, index)
           } else if (url.indexOf('cheshihao.cheshi.com/news') > -1) {
             that.cheShiHao(response, index)
           } else if (url.indexOf('cheshihao.cheshi.com/video') > -1) {
             that.cheShiHao(response, index)
           } else if (url.indexOf('chexun.com') > -1) {
             that.cheXun(response, index)
-          } else if (url.indexOf('v.ifeng.com/c') > -1) {
+          } else if (url.indexOf('v.ifeng.com') > -1) {
             // TODO
           } else if (url.indexOf('hj.pcauto.com.cn') > -1) {
             that.hangjia(response, index)
           } else if (url.indexOf('toutiao.com') > -1) {
-            //TODO
+            that.toutiao(response, index)
           } else if (url.indexOf('qctt.cn/news') > -1) {
             that.qctt(response, index)
           } else if (url.indexOf('qctt.cn/video') > -1) {
             that.qcttVideo(response, index)
           } else if (url.indexOf('auto-first.cn/news/') > -1) {
             // TODO
-          } else if (url.indexOf('dripcar.com') > -1) {
-            // TODO
-          } else if (url.indexOf('sohu.com') > -1) {
+          } else if (url.indexOf('www.sohu.com') > -1) {
             that.sohu(response, index)
           } else if (url.indexOf('yidianzixun.com') > -1) {
             // that.yidianzixun(response,index)
@@ -147,19 +153,102 @@ export default {
             that.yidianzixun(response, index)
           } else if (url.indexOf('youcheyihou.com') > -1) {
             that.youcheyihou(response, index)
+          } else if (url.indexOf('v.qq.com') > -1) {
+            that.Vqq(response, index)
+          } else if (url.indexOf('dripcar.com') > -1) {
+            that.dripcar(response, index)
+          } else if (url.indexOf('myzaker.com') > -1) {
+            that.myzaker(response, index)
+          } else if (url.indexOf('laosiji.com') > -1) {
+            that.laosiji(response, index)
+          }else if (url.indexOf('chejiahao.autohome.com.cn') > -1) {
+            that.chejiahao(response, index)
+          }else if (url.indexOf('3g.k.sohu.com') > -1) {
+            that.sohu3g(response, index)
+          }else if (url.indexOf('k.sina.cn') > -1) {
+            that.sina(response, index)
           }
           resolve({index, done: '完成'})
-        }).catch(function (error) {
+        }).catch(function () {
           reject({index, done: '失败'})
-          console.log(error);
         }).finally(function () {
           console.log('done');
         })
       })
     },
+
+    sina(response, index) {
+      let html = this.$dom.load(response.data)
+      let author = html('.weibo_user').text()
+      this.$set(this.tableData[index], 'author', author)
+      // let read = html('.articleTag').children().eq(1).text().replace(/[^\d.]/g, "");
+      // this.$set(this.tableData[index], 'read', read)
+    },
+    sohu3g(response, index) {
+      let html = this.$dom.load(response.data)
+      let author = html('.name').children().eq(0).text()
+      this.$set(this.tableData[index], 'author', author)
+      // let read = html('.articleTag').children().eq(1).text().replace(/[^\d.]/g, "");
+      // this.$set(this.tableData[index], 'read', read)
+    },
+    chejiahao(response, index) {
+      let html = this.$dom.load(response.data)
+      let author = html('.articleTag').children().eq(0).text()
+      this.$set(this.tableData[index], 'author', author)
+      let read = html('.articleTag').children().eq(1).text().replace(/[^\d.]/g, "");
+      this.$set(this.tableData[index], 'read', read)
+    },
+    laosiji(response, index) {
+      let html = this.$dom.load(response.data)
+      let author = html('.author-name').children().eq(0).text()
+      this.$set(this.tableData[index], 'author', author)
+    },
+    myzaker(response, index) {
+      let html = this.$dom.load(response.data)
+      let author = html('.article-auther').text()
+      this.$set(this.tableData[index], 'author', author)
+    },
+    dripcar(response, index) {
+      let html = this.$dom.load(response.data)
+      let read = html('.middle').children().eq(1).text()
+      this.$set(this.tableData[index], 'read', read)
+      let author = html('.time').text().split('|')[0]
+      this.$set(this.tableData[index], 'author', author)
+    },
+    toutiao(response, index) {
+      //TODO
+      let html = this.$dom.load(response.data)
+      let read = html('.videoDesc__videoStatics').children().eq(0).text()
+      // let read = html('.short-video-mask-bottom-name').children().eq(0).text()
+      this.$set(this.tableData[index], 'read', read)
+      // let author = html('.user__name').text()
+      let author = html('.short-video-mask-bottom-name').text()
+      this.$set(this.tableData[index], 'author', author)
+    },
+    iqiyi(response, index) {
+      //TODO  还不行
+      let html = this.$dom.load(response.data)
+      let read = html('.c-num').text()
+      this.$set(this.tableData[index], 'read', read)
+      let author = html('.data-userName').text()
+      this.$set(this.tableData[index], 'author', author)
+    },
+    acfun(response, index) {
+      let html = this.$dom.load(response.data)
+      let read = html('.viewsCount').text()
+      this.$set(this.tableData[index], 'read', read)
+      let author = html('.up-name').text()
+      this.$set(this.tableData[index], 'author', author)
+    },
+    Vqq(response, index) {
+      let html = this.$dom.load(response.data)
+      let read = html('#mod_cover_playnum').text()
+      this.$set(this.tableData[index], 'read', read)
+    },
     youcheyihou(response, index) {
       let html = this.$dom.load(response.data)
-      let author = html('.editor-title').text();
+      // let author = html('.editor-title').text();
+      let author = html('.news-detail__summary').children().eq(0).text();
       this.$set(this.tableData[index], 'author', author)
     },
     yidianzixun(response, index) {
