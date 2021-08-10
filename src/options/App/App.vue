@@ -149,7 +149,7 @@ export default {
           } else if (url.indexOf('auto-first.cn/news/') > -1) {
             // TODO
           } else if (url.indexOf('www.sohu.com') > -1) {
-            that.sohu(response, index)
+            that.sohu(response, index,url)
           } else if (url.indexOf('yidianzixun.com') > -1) {
             // that.yidianzixun(response,index)
             //TODO
@@ -260,19 +260,55 @@ export default {
       let author = html('.yidian-info').children().eq(0).text();
       this.$set(this.tableData[index], 'author', author)
     },
-    sohu(response, index) {
+    sohu(response, index,url) {
       let html = this.$dom.load(response.data)
       let read = html('.read-num').text().replace(/[^\d.]/g, "");
       this.$set(this.tableData[index], 'read', read)
+      console.log('sohu read', read)
+      // debugger
+      if(!read){
+        let read = html('.l.read-num').text().replace(/[^\d.]/g, "");
+        this.$set(this.tableData[index], 'read', read)
+      }
+
       let author = html('.name.l').last().text()
       this.$set(this.tableData[index], 'author', author)
+      if(!author){
+        let author = html('user-info').children().eq(1).children().eq(0).text()
+        this.$set(this.tableData[index], 'author', author)
+      }
       let id = html('#sohuVideoBox').attr('id')
       if (id){
         this.$set(this.tableData[index], 'isVideo', '视频')
       }else{
         this.$set(this.tableData[index], 'isVideo', '文章')
       }
+
+      if(!read){
+        // this.requestAgain(this,index,url.replace('www.','m.'))
+        // let read = html('.read-num').children().first().text()
+        // this.$set(this.tableData[index], 'read', read)
+      }
       console.log('id',id)
+    },
+    requestAgain(that, index,url){
+      let that2 = that;
+      return new Promise((resolve, reject) => {
+        let that = that2;
+        this.$http.get(url).then(function (response) {
+          let html = that.$dom.load(response.data)
+          let author = html('#authorWrapper').children().eq(1).text()
+          that.$set(that.tableData[index], 'author', author)
+          let read = html('#videoPv').text()
+          that.$set(that.tableData[index], 'read', read)
+          that.$set(that.tableData[index], 'isVideo', '视频')
+          resolve({index, done: '完成'})
+        }).catch(function () {
+          reject({index, done: '失败'})
+        }).finally(function () {
+          console.log('done');
+        })
+      })
     },
     qcttVideo(response, index) {
       let html = this.$dom.load(response.data)
