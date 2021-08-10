@@ -40,6 +40,10 @@
             label="阅读数">
         </el-table-column>
         <el-table-column
+            prop="isVideo"
+            label="类型">
+        </el-table-column>
+        <el-table-column
             prop="status"
             label="状态">
         </el-table-column>
@@ -262,6 +266,13 @@ export default {
       this.$set(this.tableData[index], 'read', read)
       let author = html('.name.l').last().text()
       this.$set(this.tableData[index], 'author', author)
+      let id = html('#sohuVideoBox').attr('id')
+      if (id){
+        this.$set(this.tableData[index], 'isVideo', '视频')
+      }else{
+        this.$set(this.tableData[index], 'isVideo', '文章')
+      }
+      console.log('id',id)
     },
     qcttVideo(response, index) {
       let html = this.$dom.load(response.data)
