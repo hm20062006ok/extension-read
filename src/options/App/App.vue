@@ -65,8 +65,8 @@ export default {
     exportExcel() {
       import('./Export2Excel').then(excel => {
         console.log('Export2Excel')
-        const tHeader = ['链接', '作者', '阅读数', '状态']
-        const filterVal = ['link', 'author', 'read', 'status']
+        const tHeader = ['链接', '作者', '阅读数', '类型','状态']
+        const filterVal = ['link', 'author', 'read', 'isVideo','status']
         const list = this.tableData
         const data = this.formatJson(filterVal, list)
         excel.export_json_to_excel({
@@ -117,6 +117,13 @@ export default {
           url = url.replace('www.', 'm.')
         } else if (url.indexOf('toutiao.com') > -1) {
           url = url.replace('www.', 'm.')
+        }else if (url.indexOf('new.qq.com') > -1) {
+          //http://new.qq.com/omn/20210810/20210810A0DLQ400
+          //https://xw.qq.com/cmsid/20210811A02JG500?f=newdc
+          let arr = url.split('/')
+          let xxx = arr[arr.length -1]
+          url = "https://xw.qq.com/cmsid/"+ xxx +"?f=newdc"
+          console.log("requestUrl",url)
         }
 
 
@@ -171,6 +178,8 @@ export default {
             that.sohu3g(response, index)
           }else if (url.indexOf('k.sina.cn') > -1) {
             that.sina(response, index)
+          }else if (url.indexOf('new.qq.com') > -1) {
+            that.qqNews(response, index)
           }
           resolve({index, done: '完成'})
         }).catch(function () {
@@ -180,7 +189,11 @@ export default {
         })
       })
     },
-
+    qqNews(response, index){
+      let html = this.$dom.load(response.data)
+      let author = html('.media-name').text()
+      this.$set(this.tableData[index], 'author', author)
+    },
     sina(response, index) {
       let html = this.$dom.load(response.data)
       let author = html('.weibo_user').text()
