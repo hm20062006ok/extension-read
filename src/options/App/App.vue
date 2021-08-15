@@ -17,7 +17,7 @@
     </el-row>
     <el-row>
       <el-col :offset="20">
-        <el-button type="primary" @click.native="getAllData">识别</el-button>
+        <el-button type="primary" @click.native="getAllData2">识别</el-button>
         <el-button type="primary" @click.native="exportExcel">导出Excel</el-button>
       </el-col>
     </el-row>
@@ -27,25 +27,36 @@
           stripe
           style="width: 100%">
         <el-table-column
-            prop="link"
-            label="链接"
-            width="380">
+            prop="brand"
+            label="品牌">
+        </el-table-column>
+        <el-table-column
+            prop="model"
+            label="车型">
         </el-table-column>
         <el-table-column
             prop="author"
             label="作者">
         </el-table-column>
         <el-table-column
+            prop="platform"
+            label="平台">
+        </el-table-column>
+        <el-table-column
+            prop="title"
+            label="标题">
+        </el-table-column>
+        <!--<el-table-column-->
+        <!--    prop="date"-->
+        <!--    label="时间">-->
+        <!--</el-table-column>-->
+        <el-table-column
+            prop="url"
+            label="链接">
+        </el-table-column>
+        <el-table-column
             prop="read"
             label="阅读数">
-        </el-table-column>
-        <el-table-column
-            prop="isVideo"
-            label="类型">
-        </el-table-column>
-        <el-table-column
-            prop="status"
-            label="状态">
         </el-table-column>
       </el-table>
     </el-row>
@@ -58,15 +69,70 @@ export default {
   data() {
     return {
       textarea: '',
-      tableData: []
+      tableData: [],
+      sendData: []
     }
   },
   methods: {
+    getAllData2() {
+      this.$http.post('http://localhost:3000/users', {urls: JSON.stringify(this.sendData)}, {}).then(response => {
+        console.log('response', response)
+        if (response.data.success) {
+          setTimeout(function (obj) {
+            let intervId = setInterval(function () {
+              obj.that.$http.get('http://localhost:3000/users/query?id=' + obj.id).then(response => {
+                if (response.data.success) {
+                  console.log('已完成' + response.data.data)
+                  let arr = []
+                  response.data.data.map(site => {
+                    site.map(record => {
+                      console.log('record', record)
+                      arr.push(record)
+                    })
+                  })
+                  obj.that.tableData = arr.sort(function (pre, next){
+                    return pre.id - next.id
+                  })
+                  clearInterval(intervId)
+                } else {
+                  console.log('未完成')
+                }
+              })
+              console.log('id: ', obj.id)
+            }, 5 * 1000, obj)
+          }, 30 * 1000, {that: this, id: response.data.id})
+
+        }
+      }).catch(error => {
+        console.log('error', error)
+      })
+    },
+
+
+    fillData() {
+      this.sendData = this.textarea.trim().split(/[\s\n]/);
+      let links = this.textarea.trim().split(/[\s\n]/);
+      this.tableData = []
+      links.forEach((link, index) => {
+        this.tableData.push({url: link, id: index})
+      })
+      console.log(JSON.stringify(this.tableData))
+    },
     exportExcel() {
       import('./Export2Excel').then(excel => {
         console.log('Export2Excel')
-        const tHeader = ['链接', '作者', '阅读数', '类型','状态']
-        const filterVal = ['link', 'author', 'read', 'isVideo','status']
+        const tHeader = ['品牌', '车型', '作者', '平台', '标题',  '链接', '阅读数']
+        // /    "url": "https://www.sohu.com/a/483131806_120369718",
+        //     "read": "66",
+        //     "author": "车车车",
+        //     "platform": "搜狐自媒体",
+        //     "title": "20万元内最速量产车 迈锐宝XL浙赛一战封神_雪佛兰",
+        //     "brand": "",
+        //     "model": "",
+        //     "isVideo": false,
+        //     "id": 0,
+        //     "remark": ""
+        const filterVal = ['brand', 'model', 'author', 'platform', 'title', 'url','read']
         const list = this.tableData
         const data = this.formatJson(filterVal, list)
         excel.export_json_to_excel({
@@ -83,13 +149,6 @@ export default {
       }))
     },
 
-    fillData() {
-      this.tableData = []
-      let links = this.textarea.trim().split(/[\s\n]/);
-      links.forEach(link => {
-        this.tableData.push({link: link})
-      })
-    },
     async getAllData() {
       if (this.tableData.length > 0) {
         for (let i = 0; i < this.tableData.length; i++) {
@@ -117,13 +176,13 @@ export default {
           url = url.replace('www.', 'm.')
         } else if (url.indexOf('toutiao.com') > -1) {
           url = url.replace('www.', 'm.')
-        }else if (url.indexOf('new.qq.com') > -1) {
+        } else if (url.indexOf('new.qq.com') > -1) {
           //http://new.qq.com/omn/20210810/20210810A0DLQ400
           //https://xw.qq.com/cmsid/20210811A02JG500?f=newdc
           let arr = url.split('/')
-          let xxx = arr[arr.length -1]
-          url = "https://xw.qq.com/cmsid/"+ xxx +"?f=newdc"
-          console.log("requestUrl",url)
+          let xxx = arr[arr.length - 1]
+          url = "https://xw.qq.com/cmsid/" + xxx + "?f=newdc"
+          console.log("requestUrl", url)
         }
 
 
@@ -136,13 +195,13 @@ export default {
           } else if (url.indexOf('acfun.cn') > -1) {
             that.acfun(response, index)
           } else if (url.indexOf('iqiyi.com') > -1) {
-            that.iqiyi(response, index)
+            // that.iqiyi(response, index)
           } else if (url.indexOf('cheshihao.cheshi.com/news') > -1) {
             that.cheShiHao(response, index)
           } else if (url.indexOf('cheshihao.cheshi.com/video') > -1) {
             that.cheShiHao(response, index)
           } else if (url.indexOf('chexun.com') > -1) {
-            that.cheXun(response, index)
+            // that.cheXun(response, index)
           } else if (url.indexOf('v.ifeng.com') > -1) {
             // TODO
           } else if (url.indexOf('hj.pcauto.com.cn') > -1) {
@@ -156,7 +215,7 @@ export default {
           } else if (url.indexOf('auto-first.cn/news/') > -1) {
             // TODO
           } else if (url.indexOf('www.sohu.com') > -1) {
-            that.sohu(response, index,url)
+            that.sohu(response, index, url)
           } else if (url.indexOf('yidianzixun.com') > -1) {
             // that.yidianzixun(response,index)
             //TODO
@@ -172,14 +231,14 @@ export default {
             that.myzaker(response, index)
           } else if (url.indexOf('laosiji.com') > -1) {
             that.laosiji(response, index)
-          }else if (url.indexOf('chejiahao.autohome.com.cn') > -1) {
+          } else if (url.indexOf('chejiahao.autohome.com.cn') > -1) {
             that.chejiahao(response, index)
-          }else if (url.indexOf('3g.k.sohu.com') > -1) {
+          } else if (url.indexOf('3g.k.sohu.com') > -1) {
             that.sohu3g(response, index)
-          }else if (url.indexOf('k.sina.cn') > -1) {
+          } else if (url.indexOf('k.sina.cn') > -1) {
             that.sina(response, index)
-          }else if (url.indexOf('new.qq.com') > -1) {
-            that.qqNews(response, index)
+          } else if (url.indexOf('xw.qq.com') > -1) {
+            // that.qqNews(response, index)
           }
           resolve({index, done: '完成'})
         }).catch(function () {
@@ -189,7 +248,7 @@ export default {
         })
       })
     },
-    qqNews(response, index){
+    qqNews(response, index) {
       let html = this.$dom.load(response.data)
       let author = html('.media-name').text()
       this.$set(this.tableData[index], 'author', author)
@@ -273,38 +332,38 @@ export default {
       let author = html('.yidian-info').children().eq(0).text();
       this.$set(this.tableData[index], 'author', author)
     },
-    sohu(response, index,url) {
+    sohu(response, index) {
       let html = this.$dom.load(response.data)
       let read = html('.read-num').text().replace(/[^\d.]/g, "");
       this.$set(this.tableData[index], 'read', read)
       console.log('sohu read', read)
       // debugger
-      if(!read){
+      if (!read) {
         let read = html('.l.read-num').text().replace(/[^\d.]/g, "");
         this.$set(this.tableData[index], 'read', read)
       }
 
       let author = html('.name.l').last().text()
       this.$set(this.tableData[index], 'author', author)
-      if(!author){
+      if (!author) {
         let author = html('user-info').children().eq(1).children().eq(0).text()
         this.$set(this.tableData[index], 'author', author)
       }
       let id = html('#sohuVideoBox').attr('id')
-      if (id){
+      if (id) {
         this.$set(this.tableData[index], 'isVideo', '视频')
-      }else{
+      } else {
         this.$set(this.tableData[index], 'isVideo', '文章')
       }
 
-      if(!read){
+      if (!read) {
         // this.requestAgain(this,index,url.replace('www.','m.'))
         // let read = html('.read-num').children().first().text()
         // this.$set(this.tableData[index], 'read', read)
       }
-      console.log('id',id)
+      console.log('id', id)
     },
-    requestAgain(that, index,url){
+    requestAgain(that, index, url) {
       let that2 = that;
       return new Promise((resolve, reject) => {
         let that = that2;
