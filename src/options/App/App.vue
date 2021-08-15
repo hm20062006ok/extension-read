@@ -12,6 +12,7 @@
       <el-col :span="8">
         <div class="btn-wrapper">
           <el-button type="primary" @click.native="fillData">填充</el-button>
+          <el-button type="primary" @click.native="fillDataJSON">填充JSON数据</el-button>
         </div>
       </el-col>
     </el-row>
@@ -19,6 +20,7 @@
       <el-col :offset="20">
         <el-button type="primary" @click.native="getAllData2">识别</el-button>
         <el-button type="primary" @click.native="exportExcel">导出Excel</el-button>
+        <el-button type="primary" @click.native="manualGetData">手动获取数据</el-button>
       </el-col>
     </el-row>
     <el-row>
@@ -58,6 +60,10 @@
             prop="read"
             label="阅读数">
         </el-table-column>
+        <el-table-column
+            prop="id"
+            label="ID">
+        </el-table-column>
       </el-table>
     </el-row>
   </div>
@@ -70,45 +76,105 @@ export default {
     return {
       textarea: '',
       tableData: [],
-      sendData: []
+      sendData: [],
+      accessId: ''
     }
   },
   methods: {
+    manualGetData() {
+      if (this.accessId) {
+        this.$http.get('http://localhost:3000/users/query?id=' + this.accessId).then(response => {
+          if (response.data.success) {
+            console.log('已完成' + response.data.data)
+            let arr = []
+            response.data.data.map(record => {
+              arr.push(record)
+            })
+            this.tableData = arr.sort(function (pre, next){
+              return pre.id - next.id
+            })
+          } else {
+            if(response.data.code === 201){
+              let arr = []
+              response.data.data.map(record => {
+                arr.push(record)
+              })
+              this.tableData = arr.sort(function (pre, next){
+                return pre.id - next.id
+              })
+              this.$message(response.data.msg +": " + response.data.completed + "/"+ response.data.total);
+            }
+          }
+        })
+      }else{
+        this.$message({
+          message: '没有id',
+          type: 'success'
+        });
+      }
+    },
     getAllData2() {
       this.$http.post('http://localhost:3000/users', {urls: JSON.stringify(this.sendData)}, {}).then(response => {
         console.log('response', response)
         if (response.data.success) {
+          this.$message({
+            message: response.data.msg,
+            type: 'success'
+          });
+          this.accessId = response.data.id
           setTimeout(function (obj) {
             let intervId = setInterval(function () {
               obj.that.$http.get('http://localhost:3000/users/query?id=' + obj.id).then(response => {
                 if (response.data.success) {
                   console.log('已完成' + response.data.data)
                   let arr = []
-                  response.data.data.map(site => {
-                    site.map(record => {
-                      console.log('record', record)
-                      arr.push(record)
-                    })
+                  response.data.data.map(record => {
+                    arr.push(record)
                   })
-                  obj.that.tableData = arr.sort(function (pre, next){
+                  obj.that.tableData = arr.sort(function (pre, next) {
                     return pre.id - next.id
                   })
                   clearInterval(intervId)
+                  obj.that.$message({
+                    message: response.data.msg,
+                    type: 'success'
+                  });
+
                 } else {
+                  if (response.data.code === 201) {
+                    let arr = []
+                    response.data.data.map(record => {
+                      arr.push(record)
+                    })
+                    obj.that.tableData = arr.sort(function (pre, next) {
+                      return pre.id - next.id
+                    })
+                    console.log("xxxxxxxxxxxxx" + response.data.msg + ": " + response.data.completed + "/" + response.data.total)
+                    obj.that.$message(response.data.msg + ": " + response.data.completed + "/" + response.data.total);
+                  } else {
+                    obj.that.$message(response.data.msg);
+                  }
                   console.log('未完成')
                 }
               })
               console.log('id: ', obj.id)
-            }, 5 * 1000, obj)
+            }, 10 * 1000, obj)
           }, 30 * 1000, {that: this, id: response.data.id})
-
+        } else {
+          this.$message({
+            message: response.data.msg
+          });
         }
       }).catch(error => {
         console.log('error', error)
       })
     },
 
-
+    fillDataJSON() {
+      this.tableData = JSON.parse(this.textarea).data.sort(function (pre, next) {
+        return pre.id - next.id
+      })
+    },
     fillData() {
       this.sendData = this.textarea.trim().split(/[\s\n]/);
       let links = this.textarea.trim().split(/[\s\n]/);
@@ -121,7 +187,7 @@ export default {
     exportExcel() {
       import('./Export2Excel').then(excel => {
         console.log('Export2Excel')
-        const tHeader = ['品牌', '车型', '作者', '平台', '标题',  '链接', '阅读数']
+        const tHeader = ['品牌', '车型', '作者', '平台', '标题', '链接', '阅读数','ID']
         // /    "url": "https://www.sohu.com/a/483131806_120369718",
         //     "read": "66",
         //     "author": "车车车",
@@ -132,7 +198,7 @@ export default {
         //     "isVideo": false,
         //     "id": 0,
         //     "remark": ""
-        const filterVal = ['brand', 'model', 'author', 'platform', 'title', 'url','read']
+        const filterVal = ['brand', 'model', 'author', 'platform', 'title', 'url', 'read','id']
         const list = this.tableData
         const data = this.formatJson(filterVal, list)
         excel.export_json_to_excel({
