@@ -1,86 +1,159 @@
 <template>
-  <div class="main_app">
-    <el-row>
-      <el-col :span="16">
-        <el-input
-            type="textarea"
-            :autosize="{ minRows: 4, maxRows: 10}"
-            placeholder="粘贴链接到此处，然后点击右侧填充按钮"
-            v-model="textarea">
-        </el-input>
-      </el-col>
-      <el-col :span="8">
-        <div class="btn-wrapper">
-          <el-button type="primary" @click.native="fillData">填充</el-button>
-          <el-button type="primary" @click.native="fillDataJSON">填充JSON数据</el-button>
-        </div>
-      </el-col>
-    </el-row>
-    <el-row>
-      <el-col :offset="20">
-        <el-button type="primary" @click.native="getAllData2">识别</el-button>
-        <el-button type="primary" @click.native="exportExcel">导出Excel</el-button>
-        <el-button type="primary" @click.native="manualGetData">手动获取数据</el-button>
-      </el-col>
-    </el-row>
-    <el-row>
-      <el-table
-          :data="tableData"
-          stripe
-          style="width: 100%">
-        <el-table-column
-            prop="brand"
-            label="品牌">
-        </el-table-column>
-        <el-table-column
-            prop="model"
-            label="车型">
-        </el-table-column>
-        <el-table-column
-            prop="author"
-            label="作者">
-        </el-table-column>
-        <el-table-column
-            prop="platform"
-            label="平台">
-        </el-table-column>
-        <el-table-column
-            prop="title"
-            label="标题">
-        </el-table-column>
-        <!--<el-table-column-->
-        <!--    prop="date"-->
-        <!--    label="时间">-->
-        <!--</el-table-column>-->
-        <el-table-column
-            prop="url"
-            label="链接">
-        </el-table-column>
-        <el-table-column
-            prop="read"
-            label="阅读数">
-        </el-table-column>
-        <el-table-column
-            prop="id"
-            label="ID">
-        </el-table-column>
-      </el-table>
-    </el-row>
-  </div>
+
+  <el-tabs v-model="activeName" type="border-card" tab-position="left">
+    <el-tab-pane label="爬取阅读数" name="first">
+      <div class="main_app">
+        <el-row>
+          <el-col :span="16">
+            <el-input
+                type="textarea"
+                :autosize="{ minRows: 4, maxRows: 10}"
+                placeholder="粘贴链接到此处，然后点击右侧填充按钮"
+                v-model="textarea">
+            </el-input>
+          </el-col>
+          <el-col :span="8">
+            <div class="btn-wrapper">
+              <el-button type="primary" @click.native="fillData">填充</el-button>
+              <el-button type="primary" @click.native="fillDataJSON">填充JSON数据</el-button>
+            </div>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :offset="20">
+            <el-button type="primary" @click.native="getAllData2">识别</el-button>
+            <el-button type="primary" @click.native="exportExcel">导出Excel</el-button>
+            <el-button type="primary" @click.native="manualGetData">手动获取数据</el-button>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-table
+              :data="tableData"
+              stripe
+              style="width: 100%">
+            <el-table-column
+                prop="brand"
+                label="品牌">
+            </el-table-column>
+            <el-table-column
+                prop="model"
+                label="车型">
+            </el-table-column>
+            <el-table-column
+                prop="author"
+                label="作者">
+            </el-table-column>
+            <el-table-column
+                prop="platform"
+                label="平台">
+            </el-table-column>
+            <el-table-column
+                prop="title"
+                label="标题">
+            </el-table-column>
+            <!--<el-table-column-->
+            <!--    prop="date"-->
+            <!--    label="时间">-->
+            <!--</el-table-column>-->
+            <el-table-column
+                prop="url"
+                label="链接">
+            </el-table-column>
+            <el-table-column
+                prop="read"
+                label="阅读数">
+            </el-table-column>
+            <el-table-column
+                prop="id"
+                label="ID">
+            </el-table-column>
+          </el-table>
+        </el-row>
+      </div>
+    </el-tab-pane>
+    <el-tab-pane label="搜狗巡检" name="second">
+      <el-row>
+        <el-col :span="8">
+          <el-checkbox :indeterminate="isIndeterminate" v-model="checkAll" @change="handleCheckAllChange">全选
+          </el-checkbox>
+        </el-col>
+        <el-col :span="4">补充关键字</el-col>
+        <el-col :span="8" :offset="4" style=" display: flex; justify-content: center; align-items: center">开始</el-col>
+      </el-row>
+
+      <div style="margin: 15px 0;"></div>
+      <el-row>
+        <el-col :span="8">
+          <el-checkbox-group v-model="checkedCities" @change="handleCheckedCitiesChange">
+            <el-checkbox v-for="city in cities" :label="city" :key="city">{{ city }}</el-checkbox>
+          </el-checkbox-group>
+        </el-col>
+        <el-col :span="4">
+          <el-input
+              type="textarea"
+              placeholder="输入要补充的关键字，有多个关键字时请以回车换行来分隔"
+              :autosize="{ minRows: 4, maxRows: 10}"
+              v-model="keywords">
+          </el-input>
+        </el-col>
+        <el-col :span="4">
+          <el-button type="primary" icon="el-icon-edit"  @click="addKeyword">添加</el-button>
+        </el-col>
+        <el-col :span="8">
+          <div style="height: 50px; display: flex; justify-content: center; align-items: center">
+            <el-button type="primary" icon="el-icon-search">开始巡检</el-button>
+          </div>
+        </el-col>
+      </el-row>
+
+    </el-tab-pane>
+  </el-tabs>
+
 </template>
 
 <script>
+const cityOptions = [
+  'GL8', 'GL6', '微蓝6', '微蓝7', '昂科威', '昂科威plus', '昂科拉', '威朗', '昂科雷', '君越', '君威',
+  '威朗pro', '英朗', '阅朗', '凯越', '畅巡', '开拓者', '科鲁泽', '科鲁兹',
+  '科沃兹 ', '科尔维特', '库罗德', '科迈罗', '探界者', '迈锐宝XL', '沃兰多', '探界者 ', 'CT4',
+  'CT5', 'CT6', 'XT4', 'XT5', 'XT6', '凯雷德', 'Lyriq', '上汽通用1.5T', '别克', '雪弗兰', '凯迪拉克'
+];
 export default {
   name: 'app',
   data() {
     return {
+      keywords: '',
+      activeName: 'first',
       textarea: '',
       tableData: [],
       sendData: [],
-      accessId: ''
+      accessId: '',
+      checkAll: false,
+      checkedCities: [],
+      cities: cityOptions,
+      isIndeterminate: false
     }
   },
   methods: {
+    addKeyword(){
+      let keywordsArr = this.keywords.trim().split(/[\s\n]/);
+      if(keywordsArr && keywordsArr.length > 0){
+        this.checkedCities.push(...keywordsArr)
+        this.cities.push(...keywordsArr)
+      }
+      console.log(this.checkedCities)
+    },
+    handleCheckAllChange(val) {
+      this.checkedCities = val ? cityOptions : [];
+      this.isIndeterminate = false;
+    },
+
+    handleCheckedCitiesChange(value) {
+      console.log(this.checkedCities)
+      let checkedCount = value.length;
+      this.checkAll = checkedCount === this.cities.length;
+      this.isIndeterminate = checkedCount > 0 && checkedCount < this.cities.length;
+    },
     manualGetData() {
       if (this.accessId) {
         this.$http.get('http://localhost:3000/users/query?id=' + this.accessId).then(response => {
@@ -90,23 +163,23 @@ export default {
             response.data.data.map(record => {
               arr.push(record)
             })
-            this.tableData = arr.sort(function (pre, next){
+            this.tableData = arr.sort(function (pre, next) {
               return pre.id - next.id
             })
           } else {
-            if(response.data.code === 201){
+            if (response.data.code === 201) {
               let arr = []
               response.data.data.map(record => {
                 arr.push(record)
               })
-              this.tableData = arr.sort(function (pre, next){
+              this.tableData = arr.sort(function (pre, next) {
                 return pre.id - next.id
               })
-              this.$message(response.data.msg +": " + response.data.completed + "/"+ response.data.total);
+              this.$message(response.data.msg + ": " + response.data.completed + "/" + response.data.total);
             }
           }
         })
-      }else{
+      } else {
         this.$message({
           message: '没有id',
           type: 'success'
@@ -187,7 +260,7 @@ export default {
     exportExcel() {
       import('./Export2Excel').then(excel => {
         console.log('Export2Excel')
-        const tHeader = ['品牌', '车型', '作者', '平台', '标题', '链接', '阅读数','ID']
+        const tHeader = ['品牌', '车型', '作者', '平台', '标题', '链接', '阅读数', 'ID']
         // /    "url": "https://www.sohu.com/a/483131806_120369718",
         //     "read": "66",
         //     "author": "车车车",
@@ -198,7 +271,7 @@ export default {
         //     "isVideo": false,
         //     "id": 0,
         //     "remark": ""
-        const filterVal = ['brand', 'model', 'author', 'platform', 'title', 'url', 'read','id']
+        const filterVal = ['brand', 'model', 'author', 'platform', 'title', 'url', 'read', 'id']
         const list = this.tableData
         const data = this.formatJson(filterVal, list)
         excel.export_json_to_excel({
