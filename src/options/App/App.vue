@@ -101,7 +101,7 @@
         </el-col>
         <el-col :span="8">
           <div style="height: 50px; display: flex; justify-content: center; align-items: center">
-            <el-button type="primary" icon="el-icon-search">开始巡检</el-button>
+            <el-button type="primary" icon="el-icon-search" @click="startSpam">开始巡检</el-button>
           </div>
         </el-col>
       </el-row>
@@ -135,13 +135,21 @@ export default {
     }
   },
   methods: {
-    addKeyword(){
-      let keywordsArr = this.keywords.trim().split(/[\s\n]/);
-      if(keywordsArr && keywordsArr.length > 0){
-        this.checkedCities.push(...keywordsArr)
-        this.cities.push(...keywordsArr)
-      }
+    startSpam(){
       console.log(this.checkedCities)
+      if( this. checkedCities.length > 0)
+        this.$http.post('http://localhost:3000/', {urls: JSON.stringify(this.checkedCities)}, {}).then(response => {
+          console.log(response)
+        })
+    },
+    addKeyword(){
+      if (this.keywords.length > 0) {
+        let keywordsArr = this.keywords.trim().split(/[\s\n]/);
+        if(keywordsArr && keywordsArr.length > 0){
+          this.checkedCities.push(...keywordsArr)
+          this.cities.push(...keywordsArr)
+        }
+      }
     },
     handleCheckAllChange(val) {
       this.checkedCities = val ? cityOptions : [];
