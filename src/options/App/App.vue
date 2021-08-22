@@ -138,7 +138,7 @@ export default {
     startSpam(){
       console.log(this.checkedCities)
       if( this. checkedCities.length > 0)
-        this.$http.post('http://localhost:3000/', {urls: JSON.stringify(this.checkedCities)}, {}).then(response => {
+        this.$http.post('http://localhost:3000/', {keywords: JSON.stringify(this.checkedCities)}, {}).then(response => {
           console.log(response)
         })
     },
