@@ -105,7 +105,22 @@
           </div>
         </el-col>
       </el-row>
+      <el-row>
+        <el-col :offset="20">
+          <el-button type="primary" @click.native="exportExcel2">导出Excel</el-button>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-table :data="soguoData" stripe style="width: 100%;margin-top: 40px">
 
+          <el-table-column prop="keyword" label="关键字"></el-table-column>
+          <el-table-column prop="title" label="标题"></el-table-column>
+          <el-table-column prop="summary" label="摘要"></el-table-column>
+          <el-table-column prop="date" label="时间"></el-table-column>
+          <el-table-column prop="url" label="链接"></el-table-column>
+
+        </el-table>
+      </el-row>
     </el-tab-pane>
   </el-tabs>
 
@@ -126,12 +141,14 @@ export default {
       activeName: 'first',
       textarea: '',
       tableData: [],
+      soguoData: [],
       sendData: [],
       accessId: '',
       checkAll: false,
       checkedCities: [],
       cities: cityOptions,
-      isIndeterminate: false
+      isIndeterminate: false,
+      sogouId: ''
     }
   },
   methods: {
@@ -140,6 +157,58 @@ export default {
       if( this. checkedCities.length > 0)
         this.$http.post('http://localhost:3000/', {keywords: JSON.stringify(this.checkedCities)}, {}).then(response => {
           console.log(response)
+          if (response.data.success) {
+            this.$message({
+              message: response.data.msg,
+              type: 'success'
+            });
+            this.sogouId = response.data.id
+            setTimeout(function (obj) {
+              let intervId = setInterval(function () {
+                obj.that.$http.get('http://localhost:3000/query?id=' + obj.id).then(response => {
+                  if (response.data.success) {
+                    console.log('已完成' + response.data.data)
+                    let arr = []
+                    response.data.data.map(keywordData => {
+                      keywordData.map(record => {
+                        arr.push(record)
+                      })
+                    })
+                    obj.that.soguoData = arr
+                    // obj.that.tableData = arr.sort(function (pre, next) {
+                    //   return pre.id - next.id
+                    // })
+                    clearInterval(intervId)
+                    obj.that.$message({
+                      message: response.data.msg,
+                      type: 'success'
+                    });
+
+                  } else {
+                    if (response.data.code === 201) {
+                      let arr = []
+                      response.data.data.map(keywordData => {
+                        keywordData.map(record => {
+                          arr.push(record)
+                        })
+                      })
+                      obj.that.soguoData = arr
+                      console.log("xxxxxxxxxxxxx" + response.data.msg + ": " + response.data.completed + "/" + response.data.total)
+                      obj.that.$message(response.data.msg + ": " + response.data.completed + "/" + response.data.total);
+                    } else {
+                      obj.that.$message(response.data.msg);
+                    }
+                    console.log('未完成')
+                  }
+                })
+                console.log('id: ', obj.id)
+              }, 10 * 1000, obj)
+            }, 30 * 1000, {that: this, id: response.data.id})
+          } else {
+            this.$message({
+              message: response.data.msg
+            });
+          }
         })
     },
     addKeyword(){
@@ -264,6 +333,21 @@ export default {
         this.tableData.push({url: link, id: index})
       })
       console.log(JSON.stringify(this.tableData))
+    },
+    exportExcel2(){
+      import('./Export2Excel').then(excel => {
+        const tHeader = ['关键字', '标题', '摘要', '时间', '链接']
+        const filterVal = ['keyword', 'title', 'summary', 'date', 'url']
+        const list = this.soguoData
+        const data = this.formatJson(filterVal, list)
+        excel.export_json_to_excel({
+          header: tHeader,
+          data,
+          filename: 'sogou_data',
+          autoWidth: this.autoWidth
+        })
+
+      })
     },
     exportExcel() {
       import('./Export2Excel').then(excel => {
