@@ -19,8 +19,11 @@
             </div>
           </el-col>
         </el-row>
-        <el-row>
-          <el-col :offset="20">
+        <el-row style="margin-top: 20px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between">
+          <el-col :span="14">
+            <el-progress :text-inside="true" :stroke-width="14" :percentage="percent"></el-progress>
+          </el-col>
+          <el-col :span="9">
             <el-button type="primary" @click.native="getAllData2">识别</el-button>
             <el-button type="primary" @click.native="exportExcel">导出Excel</el-button>
             <el-button type="primary" @click.native="manualGetData">手动获取数据</el-button>
@@ -137,6 +140,7 @@ export default {
   name: 'app',
   data() {
     return {
+      percent: 0,
       keywords: '',
       activeName: 'first',
       textarea: '',
@@ -289,7 +293,7 @@ export default {
                     message: response.data.msg,
                     type: 'success'
                   });
-
+                  obj.that.percent = 100
                 } else {
                   if (response.data.code === 201) {
                     let arr = []
@@ -299,6 +303,7 @@ export default {
                     obj.that.tableData = arr.sort(function (pre, next) {
                       return pre.id - next.id
                     })
+                    obj.that.percent = Math.round((response.data.completed / response.data.total) * 10000 ) / 100
                     console.log("xxxxxxxxxxxxx" + response.data.msg + ": " + response.data.completed + "/" + response.data.total)
                     obj.that.$message(response.data.msg + ": " + response.data.completed + "/" + response.data.total);
                   } else {

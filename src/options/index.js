@@ -7,7 +7,7 @@ const cheerio = require('cheerio');
 import 'element-ui/lib/theme-chalk/index.css';
 
 Vue.component("app-component", AppComponent);
-import {Input, Row, Button, Table, TableColumn, Message, Tabs, TabPane, Col, Checkbox, CheckboxGroup} from 'element-ui'
+import {Input, Row, Button, Table, TableColumn, Message, Tabs, TabPane, Col, Checkbox, CheckboxGroup, Progress } from 'element-ui'
 
 Vue.use(Input)
 Vue.use(Row)
@@ -19,6 +19,7 @@ Vue.use(Tabs)
 Vue.use(TabPane)
 Vue.use(Checkbox)
 Vue.use(CheckboxGroup)
+Vue.use(Progress)
 Vue.prototype.$http = axios
 Vue.prototype.$dom = cheerio
 Vue.prototype.$message = Message;
